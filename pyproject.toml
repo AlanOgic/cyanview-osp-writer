@@ -1,0 +1,47 @@
+[project]
+name = "cyanview-osp-writer"
+version = "0.1.0"
+description = "MCP server reviewing Cyanview drafts with OSP methodology + Cyanview brand layers"
+requires-python = ">=3.11"
+license = { text = "CC-BY-SA-4.0" }
+authors = [{ name = "alanogic" }]
+dependencies = [
+  "mcp>=1.0",
+  "pydantic>=2.0",
+  "pyyaml>=6.0",
+  "structlog>=24.0",
+  "regex>=2024.0",
+]
+
+[project.scripts]
+cyanview-osp-writer = "cyanview_osp_writer.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cyanview_osp_writer"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/cyanview_osp_writer/resources" = "cyanview_osp_writer/resources"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "pytest-asyncio>=0.23",
+  "pytest-cov>=5.0",
+  "ruff>=0.6",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["src/cyanview_osp_writer"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
