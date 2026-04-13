@@ -54,6 +54,13 @@ def build_server() -> FastMCP:
         """Run the Cyanview glossary regex layer and return structured hits."""
         return check_glossary(text).model_dump()
 
+    from cyanview_osp_writer.tools.check_claims import check_claims
+
+    @server.tool()
+    def check_claims_tool(text: str) -> dict:
+        """Run the Cyanview claims regex layer and return structured hits."""
+        return check_claims(text).model_dump()
+
     return server
 
 
