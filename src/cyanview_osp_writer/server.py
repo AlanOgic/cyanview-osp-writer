@@ -89,6 +89,18 @@ def build_server() -> FastMCP:
         """Return OSP Meta-information guidance plus the draft."""
         return osp_meta(text).model_dump()
 
+    from cyanview_osp_writer.tools.review_draft import review_draft
+
+    @server.tool()
+    def review_draft_tool(
+        text: str,
+        audience: str,
+        content_type: str,
+        focus: list[str] | None = None,
+    ) -> dict:
+        """Run the full review pipeline and return a structured ReviewBrief."""
+        return review_draft(text, audience, content_type, focus).model_dump()
+
     return server
 
 
