@@ -61,6 +61,13 @@ def build_server() -> FastMCP:
         """Run the Cyanview claims regex layer and return structured hits."""
         return check_claims(text).model_dump()
 
+    from cyanview_osp_writer.tools.check_audience import check_audience
+
+    @server.tool()
+    def check_audience_tool(text: str, audience: str) -> dict:
+        """Assemble an audience-tone review prompt for the host LLM."""
+        return check_audience(text, audience).model_dump()
+
     return server
 
 
