@@ -1,3 +1,8 @@
 """cyanview-osp-writer — MCP server for Cyanview draft review with OSP methodology."""
 
-__version__ = "0.1.0"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("cyanview-osp-writer")
+except PackageNotFoundError:
+    __version__ = "0.0.0.dev0"
