@@ -8,7 +8,7 @@ from cyanview_osp_writer.schemas import GlossaryFile, GlossaryTerm
 
 REGEX_TIMEOUT_SECONDS = 0.1
 
-# Match fenced code blocks (```...```), inline code (`...`), and indented code blocks.
+# Match fenced code blocks (```...```) and inline code (`...`).
 _CODE_BLOCK_PATTERN = regex.compile(
     r"```.*?```|`[^`\n]*`",
     flags=regex.DOTALL,
@@ -73,6 +73,14 @@ class GlossaryEngine:
         )
 
     def scan(self, text: str) -> list[GlossaryHit]:
+        """Scan text for rejected glossary terms; return hits sorted by offset.
+
+        Raises:
+            TimeoutError: If a compiled pattern exceeds
+                ``REGEX_TIMEOUT_SECONDS`` on the input. Callers that accept
+                untrusted glossary YAML should wrap this call and surface
+                the timeout as a structured error.
+        """
         masked = self._mask_code_blocks(text)
         hits: list[GlossaryHit] = []
         for term in self._terms:
