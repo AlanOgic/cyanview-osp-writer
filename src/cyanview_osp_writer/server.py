@@ -46,6 +46,14 @@ def build_server() -> FastMCP:
     )
 
     server = FastMCP("cyanview-osp-writer")
+
+    from cyanview_osp_writer.tools.check_glossary import check_glossary
+
+    @server.tool()
+    def check_glossary_tool(text: str) -> dict:
+        """Run the Cyanview glossary regex layer and return structured hits."""
+        return check_glossary(text).model_dump()
+
     return server
 
 
