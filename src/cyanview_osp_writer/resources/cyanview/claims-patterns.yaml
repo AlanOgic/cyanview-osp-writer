@@ -1,0 +1,23 @@
+version: 1
+banned_superlatives:
+  - pattern: "\\b(industry[- ]leading|first[- ]ever|world['’]?s (best|first)|revolutionary|game[- ]changer|cutting[- ]edge|best[- ]in[- ]class)\\b"
+    severity: high
+    reason: "Unverifiable marketing superlative — rewrite with concrete evidence."
+  - pattern: "\\b(seamless|effortless|magical)\\b"
+    severity: medium
+    reason: "Vague feel-good adjective — replace with the specific behavior."
+technical_claims_needing_source:
+  - pattern: "\\bsub[- ]?\\d+\\s?ms\\b"
+    severity: medium
+    reason: "Latency claim — needs a measurement context or remove."
+  - pattern: "\\bzero[- ]latency\\b"
+    severity: high
+    reason: "Zero-latency is physically impossible — restate as a specific bound."
+  - pattern: "\\b(unlimited|100%\\s+(compatible|reliable))\\b"
+    severity: high
+    reason: "Absolute claim — needs scope qualifier or remove."
+require_sourcing_topics:
+  - "latency numbers"
+  - "compatibility with specific cameras"
+  - "throughput / bandwidth figures"
+  - "frame-rate or resolution support"

@@ -1,0 +1,34 @@
+version: 1
+audiences:
+  dp:
+    label: "Director of Photography / Cinematographer"
+    assumes:
+      - "cinematic language"
+      - "lens, shutter, ISO, color science fluency"
+      - "creative outcomes drive decisions"
+    avoid:
+      - "deep network protocol jargon"
+      - "rack-unit talk"
+      - "raw latency numbers without creative context"
+    tone: "creative, outcome-focused, visual"
+  broadcast_engineer:
+    label: "Broadcast / Live Engineer"
+    assumes:
+      - "SDI/IP workflows"
+      - "CCU concepts"
+      - "latency budgets and signal integrity"
+    avoid:
+      - "marketing fluff"
+      - "vague seamless or magical claims"
+      - "creative-only framing without specs"
+    tone: "precise, spec-driven, skeptical of hype"
+  rental_house:
+    label: "Rental House / Assistant Camera"
+    assumes:
+      - "gear logistics"
+      - "compatibility matrices"
+      - "fast turnaround between productions"
+    avoid:
+      - "abstract workflow talk"
+      - "marketing-only framing"
+    tone: "practical, checklist-friendly, compatibility-first"
