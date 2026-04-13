@@ -31,7 +31,7 @@ class Resources:
 
 
 def _read_text(*parts: str) -> str:
-    files = importlib_resources.files("cyanview_osp_writer.resources")
+    files = importlib_resources.files("cyanview_osp_writer").joinpath("resources")
     for p in parts:
         files = files.joinpath(p)
     return files.read_text(encoding="utf-8")
