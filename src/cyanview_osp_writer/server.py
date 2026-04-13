@@ -75,6 +75,13 @@ def build_server() -> FastMCP:
         """Return OSP Editing Codes guidance plus the draft."""
         return osp_edit(text).model_dump()
 
+    from cyanview_osp_writer.tools.osp_seo import osp_seo
+
+    @server.tool()
+    def osp_seo_tool(text: str, target_keywords: list[str] | None = None) -> dict:
+        """Return OSP On-Page SEO guidance plus the draft."""
+        return osp_seo(text, target_keywords).model_dump()
+
     return server
 
 
