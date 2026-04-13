@@ -68,6 +68,13 @@ def build_server() -> FastMCP:
         """Assemble an audience-tone review prompt for the host LLM."""
         return check_audience(text, audience).model_dump()
 
+    from cyanview_osp_writer.tools.osp_edit import osp_edit
+
+    @server.tool()
+    def osp_edit_tool(text: str) -> dict:
+        """Return OSP Editing Codes guidance plus the draft."""
+        return osp_edit(text).model_dump()
+
     return server
 
 
