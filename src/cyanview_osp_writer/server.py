@@ -101,6 +101,46 @@ def build_server() -> FastMCP:
         """Run the full review pipeline and return a structured ReviewBrief."""
         return review_draft(text, audience, content_type, focus).model_dump()
 
+    from importlib import resources as ir
+
+    def _read_cyanview(filename: str) -> str:
+        return (
+            ir.files("cyanview_osp_writer")
+            .joinpath("resources")
+            .joinpath("cyanview")
+            .joinpath(filename)
+            .read_text(encoding="utf-8")
+        )
+
+    @server.resource("cyanview://glossary.yaml")
+    def _glossary_resource() -> str:
+        return _read_cyanview("glossary.yaml")
+
+    @server.resource("cyanview://audiences.yaml")
+    def _audiences_resource() -> str:
+        return _read_cyanview("audiences.yaml")
+
+    @server.resource("cyanview://claims-patterns.yaml")
+    def _claims_resource() -> str:
+        return _read_cyanview("claims-patterns.yaml")
+
+    def _make_osp_resource(guide_name: str):
+        @server.resource(f"osp://{guide_name}.md")
+        def _osp_resource() -> str:
+            return resources.osp_guides[guide_name]
+
+        return _osp_resource
+
+    _osp_guide_names = (
+        "writing-guide",
+        "editing-codes",
+        "seo-guide",
+        "meta-guide",
+        "value-map",
+    )
+    for _guide in _osp_guide_names:
+        _make_osp_resource(_guide)
+
     return server
 
 
