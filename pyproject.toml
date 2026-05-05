@@ -3,7 +3,7 @@ name = "cyanview-osp-writer"
 version = "0.1.0"
 description = "MCP server reviewing Cyanview drafts with OSP methodology + Cyanview brand layers"
 requires-python = ">=3.11"
-license = { text = "CC-BY-SA-4.0" }
+license = "CC-BY-SA-4.0"
 authors = [{ name = "alanogic" }]
 dependencies = [
   "mcp>=1.0",

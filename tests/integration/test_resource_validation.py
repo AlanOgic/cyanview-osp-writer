@@ -34,5 +34,11 @@ class TestResourceValidation:
     def test_osp_source_sha_present(self):
         r = load_resources()
         assert r.osp_source_sha
-        # Either "placeholder" (pre-sync) or a 40-char SHA — both acceptable.
-        assert r.osp_source_sha == "placeholder" or len(r.osp_source_sha) == 40
+        # "placeholder" is the literal contents of the committed
+        # .source-sha before the first sync; "unknown" is the
+        # resources.py fallback if the file is missing entirely;
+        # post-sync the file holds a 40-char git SHA.
+        assert (
+            r.osp_source_sha in {"placeholder", "unknown"}
+            or len(r.osp_source_sha) == 40
+        )

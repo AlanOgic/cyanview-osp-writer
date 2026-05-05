@@ -32,52 +32,53 @@ __all__ = [
 logger = structlog.get_logger(__name__)
 
 
+_FOCUS_INSTRUCTIONS: tuple[tuple[str, str], ...] = (
+    (
+        "glossary",
+        "Apply glossary hits inline: show each rejected term with its "
+        "canonical replacement.",
+    ),
+    (
+        "claims",
+        "Apply claims hits: rewrite each high-severity superlative or "
+        "unsourced technical claim.",
+    ),
+    (
+        "audience",
+        "Apply audience guidance: flag tone mismatches and "
+        "assumed-knowledge gaps for the named audience.",
+    ),
+    (
+        "osp_edit",
+        "Apply OSP Editing Codes: produce a code-tagged review with "
+        "before/after suggestions.",
+    ),
+    (
+        "osp_seo",
+        "Apply OSP On-Page SEO: suggest keyword integration and "
+        "structure improvements.",
+    ),
+    (
+        "osp_meta",
+        "Apply OSP Meta guide: produce H1, meta title (50-60), meta "
+        "description (155-160), slug.",
+    ),
+)
+
+
 def _build_execution_plan(active: list[str], audience: str) -> list[str]:
-    plan: list[str] = [
-        "1. Read the structured sections below as your marching orders.",
-        f"2. Render the review for audience={audience}.",
+    active_set = set(active)
+    steps: list[str] = [
+        "Read the structured sections below as your marching orders.",
+        f"Render the review for audience={audience}.",
     ]
-    step = 3
-    if "glossary" in active:
-        plan.append(
-            f"{step}. Apply glossary hits inline: show each rejected term "
-            "with its canonical replacement."
-        )
-        step += 1
-    if "claims" in active:
-        plan.append(
-            f"{step}. Apply claims hits: rewrite each high-severity "
-            "superlative or unsourced technical claim."
-        )
-        step += 1
-    if "audience" in active:
-        plan.append(
-            f"{step}. Apply audience guidance: flag tone mismatches and "
-            "assumed-knowledge gaps for the named audience."
-        )
-        step += 1
-    if "osp_edit" in active:
-        plan.append(
-            f"{step}. Apply OSP Editing Codes: produce a code-tagged "
-            "review with before/after suggestions."
-        )
-        step += 1
-    if "osp_seo" in active:
-        plan.append(
-            f"{step}. Apply OSP On-Page SEO: suggest keyword integration "
-            "and structure improvements."
-        )
-        step += 1
-    if "osp_meta" in active:
-        plan.append(
-            f"{step}. Apply OSP Meta guide: produce H1, meta title "
-            "(50-60), meta description (155-160), slug."
-        )
-        step += 1
-    plan.append(
-        f"{step}. Summarise the top 3 most-impactful changes at the end."
+    steps.extend(
+        instruction
+        for focus, instruction in _FOCUS_INSTRUCTIONS
+        if focus in active_set
     )
-    return plan
+    steps.append("Summarise the top 3 most-impactful changes at the end.")
+    return [f"{i}. {step}" for i, step in enumerate(steps, start=1)]
 
 
 def review_draft(

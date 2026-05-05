@@ -36,6 +36,8 @@ Review the draft below against ALL THREE Cyanview audience profiles below.
 Note where the draft serves one audience well but fails another. When the
 audiences have conflicting needs (e.g., DP vs broadcast engineer), call
 out the conflict explicitly rather than picking a side.
+
+{profiles}
 """
 
 
@@ -50,8 +52,8 @@ class AudienceLayer:
                 self._audiences.audiences["broadcast_engineer"],
                 self._audiences.audiences["rental_house"],
             ]
-            guidance = _INSTRUCTIONS_MIXED + "\n" + "\n".join(
-                self._format_profile(p) for p in profiles
+            guidance = _INSTRUCTIONS_MIXED.format(
+                profiles="\n".join(self._format_profile(p) for p in profiles),
             )
         else:
             profile = self._audiences.audiences[audience]

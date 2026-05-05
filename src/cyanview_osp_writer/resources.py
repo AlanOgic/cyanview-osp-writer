@@ -1,8 +1,10 @@
 """Bundled resource loader. Validates and caches all YAML/MD resources."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from importlib import resources as importlib_resources
+from types import MappingProxyType
 
 import yaml
 
@@ -26,7 +28,7 @@ class Resources:
     glossary: GlossaryFile
     audiences: AudiencesFile
     claims: ClaimsFile
-    osp_guides: dict[str, str]
+    osp_guides: Mapping[str, str]
     osp_source_sha: str
 
 
@@ -60,7 +62,7 @@ def load_resources() -> Resources:
         glossary=glossary,
         audiences=audiences,
         claims=claims,
-        osp_guides=osp_guides,
+        osp_guides=MappingProxyType(osp_guides),
         osp_source_sha=osp_source_sha,
     )
 
