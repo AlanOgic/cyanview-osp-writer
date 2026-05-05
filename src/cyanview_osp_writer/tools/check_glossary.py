@@ -16,7 +16,13 @@ def check_glossary(text: str) -> GlossaryResult:
     validate_text(text, "check_glossary")
     resources = load_resources()
     engine = GlossaryEngine(resources.glossary)
-    hits = engine.scan(text)
+    try:
+        hits = engine.scan(text)
+    except TimeoutError as exc:
+        raise ValueError(
+            f"regex_timeout: glossary scan exceeded the per-pattern timeout. "
+            f"Detail: {exc}"
+        ) from exc
     out = [
         GlossaryHitOut(
             canonical=h.canonical,

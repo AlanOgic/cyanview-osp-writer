@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from collections.abc import Callable
 
 import structlog
 from mcp.server.fastmcp import FastMCP
@@ -12,6 +13,12 @@ from cyanview_osp_writer.resources import load_resources
 
 
 def _configure_logging() -> None:
+    """Wire stdlib logging + structlog to stderr-only JSON.
+
+    Called once from :func:`run`; intentionally NOT invoked at import time so
+    that test code paths exercising :func:`build_server` don't mutate global
+    logging configuration.
+    """
     logging.basicConfig(
         format="%(message)s",
         stream=sys.stderr,
@@ -30,7 +37,6 @@ def _configure_logging() -> None:
     )
 
 
-_configure_logging()
 logger = structlog.get_logger(__name__)
 
 
@@ -124,7 +130,7 @@ def build_server() -> FastMCP:
     def _claims_resource() -> str:
         return _read_cyanview("claims-patterns.yaml")
 
-    def _make_osp_resource(guide_name: str):
+    def _make_osp_resource(guide_name: str) -> Callable[[], str]:
         @server.resource(f"osp://{guide_name}.md")
         def _osp_resource() -> str:
             return resources.osp_guides[guide_name]
@@ -145,5 +151,6 @@ def build_server() -> FastMCP:
 
 
 def run() -> None:
+    _configure_logging()
     server = build_server()
     server.run()

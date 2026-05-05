@@ -60,9 +60,19 @@ class ClaimPattern(BaseModel):
     @classmethod
     def _compilable(cls, v: str) -> str:
         try:
-            regex.compile(v)
+            compiled = regex.compile(v, flags=regex.IGNORECASE)
         except regex.error as exc:
             raise ValueError(f"Invalid regex pattern: {exc}") from exc
+        # Catch obvious catastrophic backtrackers (e.g. ``(a+)+b``) at load
+        # time rather than at scan time. Scans use a 0.1s timeout; this
+        # check is intentionally tighter so we surface bad patterns early.
+        try:
+            compiled.search("a" * 200, timeout=0.05)
+        except TimeoutError as exc:
+            raise ValueError(
+                f"Pattern {v!r} times out on benign input — "
+                f"likely catastrophic backtracking."
+            ) from exc
         return v
 
 

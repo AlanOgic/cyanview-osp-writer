@@ -16,7 +16,13 @@ def check_claims(text: str) -> ClaimsResult:
     validate_text(text, "check_claims")
     resources = load_resources()
     engine = ClaimsEngine(resources.claims)
-    hits = engine.scan(text)
+    try:
+        hits = engine.scan(text)
+    except TimeoutError as exc:
+        raise ValueError(
+            f"regex_timeout: claims scan exceeded the per-pattern timeout. "
+            f"Detail: {exc}"
+        ) from exc
     out = [
         ClaimsHitOut(
             matched_text=h.matched_text,
