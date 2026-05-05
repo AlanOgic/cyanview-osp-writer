@@ -2,23 +2,26 @@
 
 Strategy:
 1. Clone upstream into a temp dir (or use a local snapshot path).
-2. Parse upstream Python modules with ``ast.parse`` (no execution) and
-   extract top-level string-constant assignments by name.
+2. Copy the guidance markdown files from the upstream package directly.
 3. Write each guide to src/cyanview_osp_writer/resources/osp/<name>.md.
 4. Record the upstream commit SHA in .source-sha.
 5. Update ATTRIBUTION.md with the sync date and SHA.
 
-Mapping from upstream constant names to our guide files is defined in
-GUIDE_MAP. If upstream renames a constant or switches to non-literal
-values (concatenation, f-strings, function calls), the script fails
-loudly with an "update GUIDE_MAP" message — update the map and, if
-needed, extend ``_parse_string_constants`` to handle the new shape.
+Mapping from upstream filenames to our guide names is defined in
+GUIDE_MAP. If upstream renames a file, restructures the package, or
+switches back to inlining guides as Python constants, the script
+fails loudly with an "update GUIDE_MAP" message — update the map.
+
+Historical note: prior to upstream commit b66bcc6e (Sep 2025), the
+guides lived as module-level string constants in server.py and this
+script parsed them via ast.parse. Upstream has since externalised
+the guides as standalone .md files, so the script now copies bytes
+directly — simpler and removes any code-execution surface.
 """
 
 from __future__ import annotations
 
 import argparse
-import ast
 import shutil
 import subprocess
 import sys
@@ -28,14 +31,14 @@ from pathlib import Path
 REPO_URL = "https://github.com/open-strategy-partners/osp_marketing_tools"
 DEFAULT_CLONE_DIR = Path("/tmp/osp-upstream")
 
-# Upstream module path (relative to clone root) → constant name → our guide name.
-# If upstream restructures, edit this map.
-GUIDE_MAP: dict[tuple[str, str], str] = {
-    ("src/osp_marketing_tools/server.py", "WRITING_GUIDE"): "writing-guide",
-    ("src/osp_marketing_tools/server.py", "EDITING_CODES"): "editing-codes",
-    ("src/osp_marketing_tools/server.py", "SEO_GUIDE"): "seo-guide",
-    ("src/osp_marketing_tools/server.py", "META_GUIDE"): "meta-guide",
-    ("src/osp_marketing_tools/server.py", "VALUE_MAP_GUIDE"): "value-map",
+# Upstream markdown path (relative to clone root) → our guide name.
+# If upstream renames a file or moves the package, edit this map.
+GUIDE_MAP: dict[str, str] = {
+    "src/osp_marketing_tools/guide-llm.md": "writing-guide",
+    "src/osp_marketing_tools/codes-llm.md": "editing-codes",
+    "src/osp_marketing_tools/on-page-seo-guide.md": "seo-guide",
+    "src/osp_marketing_tools/meta-llm.md": "meta-guide",
+    "src/osp_marketing_tools/product-value-map-llm.md": "value-map",
 }
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -61,57 +64,16 @@ def _git_sha(repo: Path) -> str:
     return out.stdout.strip()
 
 
-def _parse_string_constants(module_path: Path) -> dict[str, str]:
-    """Parse a Python module and extract top-level string-constant assignments.
-
-    Walks the AST without executing the module. Recognises the form
-    ``NAME = "..."`` where the value is a single ``ast.Constant`` of type
-    ``str``. Skips any other shape (function calls, concatenations,
-    f-strings with substitutions, etc.) — upstream guidance modules use
-    plain triple-quoted literals, so this is sufficient.
-
-    Returns a dict mapping name → string value. Names not matching the
-    expected shape are simply absent from the result; callers should
-    check membership and raise a structured error if a required name
-    is missing.
-    """
-    source = module_path.read_text(encoding="utf-8")
-    tree = ast.parse(source, filename=str(module_path))
-    out: dict[str, str] = {}
-    for node in tree.body:
-        if not isinstance(node, ast.Assign):
-            continue
-        if not (
-            isinstance(node.value, ast.Constant)
-            and isinstance(node.value.value, str)
-        ):
-            continue
-        for target in node.targets:
-            if isinstance(target, ast.Name):
-                out[target.id] = node.value.value
-    return out
-
-
 def _extract(clone_root: Path) -> dict[str, str]:
     out: dict[str, str] = {}
-    parsed: dict[str, dict[str, str]] = {}
-    for (rel_path, const_name), guide_name in GUIDE_MAP.items():
-        if rel_path not in parsed:
-            module_path = clone_root / rel_path
-            if not module_path.exists():
-                raise RuntimeError(
-                    f"Expected upstream module not found: {module_path}. "
-                    f"Update GUIDE_MAP in scripts/sync_osp.py."
-                )
-            parsed[rel_path] = _parse_string_constants(module_path)
-        constants = parsed[rel_path]
-        if const_name not in constants:
+    for rel_path, guide_name in GUIDE_MAP.items():
+        source_path = clone_root / rel_path
+        if not source_path.exists():
             raise RuntimeError(
-                f"Upstream module {rel_path} does not define {const_name} "
-                f"as a top-level string literal. "
+                f"Expected upstream guide not found: {source_path}. "
                 f"Update GUIDE_MAP in scripts/sync_osp.py."
             )
-        out[guide_name] = constants[const_name]
+        out[guide_name] = source_path.read_text(encoding="utf-8")
     return out
 
 
