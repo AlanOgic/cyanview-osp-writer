@@ -4,21 +4,16 @@ from __future__ import annotations
 
 import structlog
 
+from cyanview_osp_writer._validation import validate_text
 from cyanview_osp_writer.layers.glossary import GlossaryEngine
 from cyanview_osp_writer.resources import load_resources
 from cyanview_osp_writer.tools.models import GlossaryHitOut, GlossaryResult
 
 logger = structlog.get_logger(__name__)
 
-MAX_TEXT_CHARS = 50_000
-
 
 def check_glossary(text: str) -> GlossaryResult:
-    if len(text) > MAX_TEXT_CHARS:
-        raise ValueError(
-            f"text_too_long: {len(text)} > {MAX_TEXT_CHARS}; "
-            "split into sections and call check_glossary per section."
-        )
+    validate_text(text, "check_glossary")
     resources = load_resources()
     engine = GlossaryEngine(resources.glossary)
     hits = engine.scan(text)

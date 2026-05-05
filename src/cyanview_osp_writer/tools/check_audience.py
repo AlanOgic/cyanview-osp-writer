@@ -4,26 +4,17 @@ from __future__ import annotations
 
 import structlog
 
+from cyanview_osp_writer._validation import validate_audience, validate_text
 from cyanview_osp_writer.layers.audience import AudienceLayer
 from cyanview_osp_writer.resources import load_resources
 from cyanview_osp_writer.tools.models import GuidanceResult
 
 logger = structlog.get_logger(__name__)
 
-VALID_AUDIENCES = {"dp", "broadcast_engineer", "rental_house", "mixed"}
-MAX_TEXT_CHARS = 50_000
-
 
 def check_audience(text: str, audience: str) -> GuidanceResult:
-    if audience not in VALID_AUDIENCES:
-        raise ValueError(
-            f"invalid_audience: {audience!r}; must be one of {sorted(VALID_AUDIENCES)}"
-        )
-    if len(text) > MAX_TEXT_CHARS:
-        raise ValueError(
-            f"text_too_long: {len(text)} > {MAX_TEXT_CHARS}; "
-            "split into sections and call check_audience per section."
-        )
+    validate_audience(audience)
+    validate_text(text, "check_audience")
     resources = load_resources()
     layer = AudienceLayer(resources.audiences)
     review = layer.assemble(text, audience=audience)

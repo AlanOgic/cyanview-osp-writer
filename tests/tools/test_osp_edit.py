@@ -2,8 +2,9 @@
 
 import pytest
 
+from cyanview_osp_writer._constants import MAX_TEXT_CHARS
 from cyanview_osp_writer.tools.models import GuidanceResult
-from cyanview_osp_writer.tools.osp_edit import MAX_TEXT_CHARS, osp_edit
+from cyanview_osp_writer.tools.osp_edit import osp_edit
 
 
 class TestOspEdit:

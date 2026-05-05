@@ -5,6 +5,8 @@ from typing import Literal
 import regex
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from cyanview_osp_writer._constants import BASE_AUDIENCES
+
 
 class GlossaryTerm(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -33,9 +35,6 @@ class AudienceProfile(BaseModel):
     tone: str
 
 
-REQUIRED_AUDIENCES = {"dp", "broadcast_engineer", "rental_house"}
-
-
 class AudiencesFile(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -43,8 +42,8 @@ class AudiencesFile(BaseModel):
     audiences: dict[str, AudienceProfile]
 
     @model_validator(mode="after")
-    def _require_three(self) -> "AudiencesFile":
-        missing = REQUIRED_AUDIENCES - set(self.audiences.keys())
+    def _require_base_audiences(self) -> "AudiencesFile":
+        missing = BASE_AUDIENCES - set(self.audiences.keys())
         if missing:
             raise ValueError(f"Missing required audiences: {sorted(missing)}")
         return self

@@ -4,6 +4,13 @@ from __future__ import annotations
 
 import structlog
 
+from cyanview_osp_writer._constants import (
+    MAX_TEXT_CHARS,
+    VALID_AUDIENCES,
+    VALID_CONTENT_TYPES,
+    VALID_FOCUS,
+)
+from cyanview_osp_writer._validation import validate_audience, validate_text
 from cyanview_osp_writer.resources import load_resources
 from cyanview_osp_writer.tools.check_audience import check_audience
 from cyanview_osp_writer.tools.check_claims import check_claims
@@ -13,25 +20,16 @@ from cyanview_osp_writer.tools.osp_edit import osp_edit
 from cyanview_osp_writer.tools.osp_meta import osp_meta
 from cyanview_osp_writer.tools.osp_seo import osp_seo
 
-logger = structlog.get_logger(__name__)
+# Re-exported for callers (and tests) that import these from this module.
+__all__ = [
+    "MAX_TEXT_CHARS",
+    "VALID_AUDIENCES",
+    "VALID_CONTENT_TYPES",
+    "VALID_FOCUS",
+    "review_draft",
+]
 
-VALID_AUDIENCES = {"dp", "broadcast_engineer", "rental_house", "mixed"}
-VALID_CONTENT_TYPES = {
-    "landing_page",
-    "blog_post",
-    "product_brief",
-    "release_note",
-    "other",
-}
-VALID_FOCUS = (
-    "glossary",
-    "claims",
-    "audience",
-    "osp_edit",
-    "osp_seo",
-    "osp_meta",
-)
-MAX_TEXT_CHARS = 50_000
+logger = structlog.get_logger(__name__)
 
 
 def _build_execution_plan(active: list[str], audience: str) -> list[str]:
@@ -89,21 +87,13 @@ def review_draft(
     focus: list[str] | None = None,
 ) -> ReviewBrief:
     """Run all six review layers and return a structured ReviewBrief."""
-    if audience not in VALID_AUDIENCES:
-        raise ValueError(
-            f"invalid_audience: {audience!r}; must be one of "
-            f"{sorted(VALID_AUDIENCES)}"
-        )
+    validate_audience(audience)
     if content_type not in VALID_CONTENT_TYPES:
         raise ValueError(
             f"invalid_content_type: {content_type!r}; must be one of "
             f"{sorted(VALID_CONTENT_TYPES)}"
         )
-    if len(text) > MAX_TEXT_CHARS:
-        raise ValueError(
-            f"text_too_long: {len(text)} > {MAX_TEXT_CHARS}; "
-            "split into sections and call review_draft per section."
-        )
+    validate_text(text, "review_draft")
     if focus is not None:
         invalid = [f for f in focus if f not in VALID_FOCUS]
         if invalid:

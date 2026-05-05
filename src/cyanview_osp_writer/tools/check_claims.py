@@ -4,21 +4,16 @@ from __future__ import annotations
 
 import structlog
 
+from cyanview_osp_writer._validation import validate_text
 from cyanview_osp_writer.layers.claims import ClaimsEngine
 from cyanview_osp_writer.resources import load_resources
 from cyanview_osp_writer.tools.models import ClaimsHitOut, ClaimsResult
 
 logger = structlog.get_logger(__name__)
 
-MAX_TEXT_CHARS = 50_000
-
 
 def check_claims(text: str) -> ClaimsResult:
-    if len(text) > MAX_TEXT_CHARS:
-        raise ValueError(
-            f"text_too_long: {len(text)} > {MAX_TEXT_CHARS}; "
-            "split into sections and call check_claims per section."
-        )
+    validate_text(text, "check_claims")
     resources = load_resources()
     engine = ClaimsEngine(resources.claims)
     hits = engine.scan(text)

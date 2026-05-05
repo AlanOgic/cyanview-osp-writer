@@ -2,7 +2,8 @@
 
 import pytest
 
-from cyanview_osp_writer.tools.check_claims import MAX_TEXT_CHARS, check_claims
+from cyanview_osp_writer._constants import MAX_TEXT_CHARS
+from cyanview_osp_writer.tools.check_claims import check_claims
 from cyanview_osp_writer.tools.models import ClaimsResult
 
 
