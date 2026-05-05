@@ -2,20 +2,23 @@
 
 Strategy:
 1. Clone upstream into a temp dir (or use a local snapshot path).
-2. Import upstream Python modules and extract module-level constants
-   that hold guidance text.
+2. Parse upstream Python modules with ``ast.parse`` (no execution) and
+   extract top-level string-constant assignments by name.
 3. Write each guide to src/cyanview_osp_writer/resources/osp/<name>.md.
 4. Record the upstream commit SHA in .source-sha.
 5. Update ATTRIBUTION.md with the sync date and SHA.
 
 Mapping from upstream constant names to our guide files is defined in
-GUIDE_MAP. If upstream renames a constant, update this map.
+GUIDE_MAP. If upstream renames a constant or switches to non-literal
+values (concatenation, f-strings, function calls), the script fails
+loudly with an "update GUIDE_MAP" message — update the map and, if
+needed, extend ``_parse_string_constants`` to handle the new shape.
 """
 
 from __future__ import annotations
 
 import argparse
-import importlib.util
+import ast
 import shutil
 import subprocess
 import sys
@@ -58,36 +61,57 @@ def _git_sha(repo: Path) -> str:
     return out.stdout.strip()
 
 
-def _import_upstream(module_path: Path):
-    spec = importlib.util.spec_from_file_location("_osp_upstream", module_path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Cannot load module spec for {module_path}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def _parse_string_constants(module_path: Path) -> dict[str, str]:
+    """Parse a Python module and extract top-level string-constant assignments.
+
+    Walks the AST without executing the module. Recognises the form
+    ``NAME = "..."`` where the value is a single ``ast.Constant`` of type
+    ``str``. Skips any other shape (function calls, concatenations,
+    f-strings with substitutions, etc.) — upstream guidance modules use
+    plain triple-quoted literals, so this is sufficient.
+
+    Returns a dict mapping name → string value. Names not matching the
+    expected shape are simply absent from the result; callers should
+    check membership and raise a structured error if a required name
+    is missing.
+    """
+    source = module_path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(module_path))
+    out: dict[str, str] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if not (
+            isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        ):
+            continue
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                out[target.id] = node.value.value
+    return out
 
 
 def _extract(clone_root: Path) -> dict[str, str]:
     out: dict[str, str] = {}
+    parsed: dict[str, dict[str, str]] = {}
     for (rel_path, const_name), guide_name in GUIDE_MAP.items():
-        module_path = clone_root / rel_path
-        if not module_path.exists():
+        if rel_path not in parsed:
+            module_path = clone_root / rel_path
+            if not module_path.exists():
+                raise RuntimeError(
+                    f"Expected upstream module not found: {module_path}. "
+                    f"Update GUIDE_MAP in scripts/sync_osp.py."
+                )
+            parsed[rel_path] = _parse_string_constants(module_path)
+        constants = parsed[rel_path]
+        if const_name not in constants:
             raise RuntimeError(
-                f"Expected upstream module not found: {module_path}. "
+                f"Upstream module {rel_path} does not define {const_name} "
+                f"as a top-level string literal. "
                 f"Update GUIDE_MAP in scripts/sync_osp.py."
             )
-        module = _import_upstream(module_path)
-        if not hasattr(module, const_name):
-            raise RuntimeError(
-                f"Upstream module {rel_path} does not define {const_name}. "
-                f"Update GUIDE_MAP in scripts/sync_osp.py."
-            )
-        text = getattr(module, const_name)
-        if not isinstance(text, str):
-            raise RuntimeError(
-                f"Upstream constant {const_name} is not a string."
-            )
-        out[guide_name] = text
+        out[guide_name] = constants[const_name]
     return out
 
 
