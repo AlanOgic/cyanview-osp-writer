@@ -95,6 +95,20 @@ def build_server() -> FastMCP:
         """Return OSP Meta-information guidance plus the draft."""
         return osp_meta(text).model_dump()
 
+    from cyanview_osp_writer.tools.osp_writing import osp_writing
+
+    @server.tool()
+    def osp_writing_tool(text: str) -> dict:
+        """Return OSP Writing Guide guidance plus the draft."""
+        return osp_writing(text).model_dump()
+
+    from cyanview_osp_writer.tools.osp_value_map import osp_value_map
+
+    @server.tool()
+    def osp_value_map_tool(text: str) -> dict:
+        """Return OSP Value Map guidance plus the draft."""
+        return osp_value_map(text).model_dump()
+
     from cyanview_osp_writer.tools.review_draft import review_draft
 
     @server.tool()

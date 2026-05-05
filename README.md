@@ -13,6 +13,11 @@ Paste a draft into Claude Code, ask for a review, and the tool returns a structu
 - **OSP On-Page SEO** — keyword integration and structure
 - **OSP Meta** — H1, meta title, description, slug
 
+The full set of upstream OSP guides is available as standalone tools too —
+`osp_writing_tool` (writing guide) and `osp_value_map_tool` (value map) — for
+parity with `osp_marketing_tools`. They aren't part of the Cyanview review
+pipeline but can be called directly when you want their guidance.
+
 ## Install
 
 In your Claude Code MCP settings:

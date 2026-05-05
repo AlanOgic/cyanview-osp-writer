@@ -25,6 +25,8 @@ class TestServerStartup:
             "osp_edit_tool",
             "osp_seo_tool",
             "osp_meta_tool",
+            "osp_writing_tool",
+            "osp_value_map_tool",
             "review_draft_tool",
         }
         assert expected.issubset(names)
